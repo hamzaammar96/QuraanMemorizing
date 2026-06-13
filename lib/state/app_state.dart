@@ -32,6 +32,7 @@ class AppState extends ChangeNotifier {
   // ===== حالة المزامنة السحابية =====
   User? user;
   String syncStatus = '';
+  bool _authResolved = false;
   bool _applyingRemote = false;
   Timer? _pushTimer;
   StreamSubscription<User?>? _authSub;
@@ -45,6 +46,9 @@ class AppState extends ChangeNotifier {
 
   /// هل المزامنة جاهزة (Firebase مهيّأ)؟
   bool get isCloudReady => _auth.isReady;
+
+  /// هل حُسمت حالة تسجيل الدخول (انتهت استعادة الجلسة)؟
+  bool get authResolved => _authResolved;
 
   bool get isSignedIn => user != null;
   String? get userEmail => user?.email;
@@ -60,15 +64,18 @@ class AppState extends ChangeNotifier {
     final savedSettings = await _storage.loadSettings();
     settings = savedSettings ?? PlanSettings.defaults();
     progress = await _storage.loadProgress();
-    _loaded = true;
     await _notifications.init();
-    notifyListeners();
 
-    // تهيئة Firebase ومتابعة حالة الدخول (إن كانت الإعدادات موجودة).
+    // تهيئة Firebase قبل التوجيه (لتفادي وميض شاشة الدخول).
     await _auth.initialize();
     if (_auth.isReady) {
       _authSub = _auth.authStateChanges().listen(_onAuthChanged);
+    } else {
+      _authResolved = true; // لا سحابة: لا حاجة لبوابة دخول.
     }
+
+    _loaded = true;
+    notifyListeners();
   }
 
   @override
@@ -100,6 +107,7 @@ class AppState extends ChangeNotifier {
 
   void _onAuthChanged(User? u) async {
     user = u;
+    _authResolved = true;
     await _docSub?.cancel();
     _docSub = null;
     if (u != null) {

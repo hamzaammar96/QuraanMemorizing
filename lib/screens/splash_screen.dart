@@ -5,6 +5,7 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import 'home_screen.dart';
 import 'onboarding_screen.dart';
+import 'sign_in_screen.dart';
 
 /// شاشة البداية — تعرض اسم التطبيق ثم تنتقل حسب حالة الإعداد.
 class SplashScreen extends StatelessWidget {
@@ -14,8 +15,8 @@ class SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
 
-    // أثناء تحميل البيانات من التخزين.
-    if (!state.isLoaded) {
+    // أثناء تحميل البيانات أو انتظار استعادة جلسة الدخول.
+    if (!state.isLoaded || (state.isCloudReady && !state.authResolved)) {
       return const Scaffold(
         backgroundColor: AppTheme.primaryGreen,
         body: Center(
@@ -24,7 +25,12 @@ class SplashScreen extends StatelessWidget {
       );
     }
 
-    // التوجيه بعد التحميل.
+    // بوابة الدخول الإلزامية عند تفعيل المزامنة.
+    if (state.isCloudReady && !state.isSignedIn) {
+      return const SignInScreen();
+    }
+
+    // التوجيه بعد الدخول.
     return state.onboardingDone ? const HomeScreen() : const OnboardingScreen();
   }
 }

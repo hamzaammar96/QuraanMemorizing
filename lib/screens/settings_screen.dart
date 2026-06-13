@@ -261,7 +261,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
-              onPressed: () => state.signOut(),
+              onPressed: () async {
+                await state.signOut();
+                if (context.mounted) {
+                  Navigator.of(context).popUntil((r) => r.isFirst);
+                }
+              },
               icon: const Icon(Icons.logout),
               label: const Text('تسجيل الخروج'),
             ),
