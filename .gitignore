@@ -21,6 +21,17 @@ android/app/profile
 android/app/release
 **/GeneratedPluginRegistrant.*
 
+# الأسرار ومفاتيح التوقيع — يجب ألا تُرفع إطلاقاً
+*.jks
+*.keystore
+*.p12
+*.pem
+key.properties
+**/google-services.json
+**/GoogleService-Info.plist
+.env
+.env.*
+
 # iOS / macOS
 ios/Pods/
 ios/.symlinks/
