@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../constants/app_strings.dart';
 import '../models/day_type.dart';
 import '../models/plan_settings.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import 'download_screen.dart';
 import 'ranges_screen.dart';
 
 /// شاشة الإعدادات — تعديل كل عناصر الخطة والإشعارات.
@@ -166,6 +168,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: const Icon(Icons.save),
             label: const Text('حفظ الإعدادات'),
           ),
+
+          _section(AppStrings.downloadTitle),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.android_rounded,
+                  color: AppTheme.primaryGreen),
+              title: const Text(AppStrings.downloadLinkLabel),
+              subtitle: const Text(AppStrings.downloadButton),
+              trailing: const Icon(Icons.chevron_left),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const DownloadScreen()),
+              ),
+            ),
+          ),
+
+          _section(AppStrings.aboutTitle),
+          const Card(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(Icons.menu_book_rounded,
+                      color: AppTheme.primaryGreen, size: 32),
+                  SizedBox(height: 8),
+                  Text(
+                    AppStrings.developedBy,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    AppStrings.freeApp,
+                    style: TextStyle(color: AppTheme.primaryGreen),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    AppStrings.rightsNote,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           const SizedBox(height: 24),
         ],
       ),

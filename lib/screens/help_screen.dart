@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../constants/app_strings.dart';
 import '../theme/app_theme.dart';
+import '../widgets/download_link.dart';
 
 /// دليل استخدام التطبيق — يظهر أول مرة، ويمكن فتحه دائماً من زر المساعدة.
 /// يعرض الخطوات مع رسوم توضيحية (أيقونات) واتجاه RTL.
@@ -66,7 +67,9 @@ class HelpScreen extends StatelessWidget {
               title: steps[i][0],
               body: steps[i][1],
             ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+          const Center(child: DownloadLink()),
+          const SizedBox(height: 8),
           ElevatedButton.icon(
             onPressed: () => Navigator.of(context).maybePop(),
             icon: const Icon(Icons.rocket_launch_rounded),

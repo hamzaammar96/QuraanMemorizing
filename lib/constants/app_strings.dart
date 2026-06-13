@@ -54,6 +54,27 @@ class AppStrings {
     ],
   ];
 
+  // ===== جهة التطوير والحقوق =====
+  static const String aboutTitle = 'حول التطبيق';
+  static const String developedBy = 'تطوير روبوغيكس — لبنان';
+  static const String freeApp = 'هذا التطبيق مجاني بالكامل';
+  static const String rightsNote = '© روبوغيكس، لبنان — جميع الحقوق محفوظة';
+
+  // ===== صفحة تحميل تطبيق أندرويد =====
+  static const String apkReleasesUrl =
+      'https://github.com/hamzaammar96/QuraanMemorizing/releases/latest';
+  static const String downloadLinkLabel = 'تحميل تطبيق أندرويد';
+  static const String downloadTitle = 'تطبيق أندرويد';
+  static const String downloadHeadline = 'حمّل مُتقِن على أجهزة أندرويد';
+  static const String downloadDescription =
+      'احصل على أحدث نسخة (APK) لتثبيتها على هاتف أندرويد، والاستفادة من '
+      'الإشعارات اليومية والعمل دون اتصال.';
+  static const String downloadButton = 'تنزيل أحدث نسخة APK';
+  static const String downloadNote =
+      'عند التثبيت قد يطلب الجهاز تفعيل «السماح بالتثبيت من مصادر غير معروفة» '
+      'للمتصفّح. الملف موقّع رسمياً وآمن.';
+  static const String openLinkError = 'تعذّر فتح الرابط';
+
   // ===== وصف التطبيق العام (المتجر / README) =====
   static const String appShortDescription =
       'مُتقِن يساعدك على تنظيم حفظ القرآن ومراجعته يومياً بخطة مرنة تتابع معك '

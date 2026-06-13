@@ -6,6 +6,7 @@ import '../constants/app_strings.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/brand_header.dart';
+import '../widgets/download_link.dart';
 
 /// شاشة تسجيل الدخول الإلزامية بحساب غوغل.
 /// تظهر قبل استخدام التطبيق عند تفعيل المزامنة السحابية.
@@ -23,39 +24,67 @@ class SignInScreen extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const BrandHeader(onDark: true, nameSize: 60),
-              const SizedBox(height: 36),
-              const Text(
-                AppStrings.welcomeTitle,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+              Expanded(
+                child: Center(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const BrandHeader(onDark: true, nameSize: 60),
+                        const SizedBox(height: 36),
+                        const Text(
+                          AppStrings.welcomeTitle,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          AppStrings.welcomeDescription,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 16, height: 1.6, color: Colors.white70),
+                        ),
+                        const SizedBox(height: 40),
+                        if (signingIn)
+                          const Center(
+                              child:
+                                  CircularProgressIndicator(color: Colors.white))
+                        else
+                          _GoogleSignInButton(
+                              onPressed: () => state.signInWithGoogle()),
+                        if (!signingIn && state.syncStatus.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          Text(
+                            state.syncStatus,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
+              // رابط تحميل تطبيق أندرويد + جهة التطوير والحقوق.
+              const DownloadLink(onDark: true),
+              const SizedBox(height: 6),
               const Text(
-                AppStrings.welcomeDescription,
+                AppStrings.developedBy,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, height: 1.6, color: Colors.white70),
+                style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              const SizedBox(height: 40),
-              if (signingIn)
-                const Center(child: CircularProgressIndicator(color: Colors.white))
-              else
-                _GoogleSignInButton(onPressed: () => state.signInWithGoogle()),
-              if (!signingIn && state.syncStatus.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Text(
-                  state.syncStatus,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white70),
-                ),
-              ],
+              const Text(
+                AppStrings.freeApp,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white70, fontSize: 12),
+              ),
             ],
           ),
         ),
