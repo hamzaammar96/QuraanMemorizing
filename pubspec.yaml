@@ -1,0 +1,36 @@
+name: mutqin
+description: "مُتقِن - تطبيق لتنظيم مراجعة وحفظ القرآن الكريم"
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # إدارة الحالة (بسيطة وواضحة)
+  provider: ^6.1.2
+
+  # التخزين المحلي للإعدادات والتقدم
+  shared_preferences: ^2.2.3
+
+  # الإشعارات اليومية المجدولة
+  flutter_local_notifications: ^17.2.2
+  timezone: ^0.9.4
+
+  # تنسيق الأرقام والتواريخ
+  intl: ^0.19.0
+
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
