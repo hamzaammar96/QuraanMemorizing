@@ -36,7 +36,12 @@ jobs:
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
             # إزالة أي فراغات/أسطر جديدة قد تتسرّب عند نسخ القيمة قبل فك الترميز.
-            printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]' | base64 -d > android/app/mutqin-release.jks
+            CLEAN=$(printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]')
+            echo "طول قيمة base64 بعد التنظيف: ${#CLEAN} (المتوقع: 3616)"
+            if ! printf '%s' "$CLEAN" | base64 -d > android/app/mutqin-release.jks 2>/dev/null; then
+              echo "::error::تعذّر فك ترميز KEYSTORE_BASE64 — القيمة غير مكتملة. أعد ضبط السر بالسلسلة الكاملة (3616 حرفاً) من ملف github-secrets.txt."
+              exit 1
+            fi
             {
               echo "storePassword=$KEYSTORE_PASSWORD"
               echo "keyPassword=$KEY_PASSWORD"
