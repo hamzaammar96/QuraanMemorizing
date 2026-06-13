@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../constants/app_strings.dart';
@@ -12,6 +13,9 @@ class DownloadLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // زر تحميل أندرويد يظهر على الويب فقط؛ يُخفى داخل التطبيق نفسه.
+    if (!kIsWeb) return const SizedBox.shrink();
+
     final onPressed = () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const DownloadScreen()),
         );

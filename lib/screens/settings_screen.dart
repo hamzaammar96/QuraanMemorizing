@@ -73,7 +73,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.fromLTRB(
+            12, 12, 12, 12 + MediaQuery.of(context).padding.bottom),
         children: [
           _section('الحساب والمزامنة'),
           _accountCard(context.watch<AppState>()),

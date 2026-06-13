@@ -25,7 +25,8 @@ class HelpScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text(AppStrings.helpTitle)),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        padding: EdgeInsets.fromLTRB(
+            16, 16, 16, 24 + MediaQuery.of(context).padding.bottom),
         children: [
           // ترويسة توضيحية.
           Container(

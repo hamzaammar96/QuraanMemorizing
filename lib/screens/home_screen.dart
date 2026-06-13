@@ -108,7 +108,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.fromLTRB(
+            12, 12, 12, 12 + MediaQuery.of(context).padding.bottom),
         children: [
           const _WelcomeBanner(),
           _DayHeader(dayType: dayType),

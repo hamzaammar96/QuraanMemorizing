@@ -24,7 +24,8 @@ class DownloadScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text(AppStrings.downloadTitle)),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.fromLTRB(
+            20, 20, 20, 20 + MediaQuery.of(context).padding.bottom),
         children: [
           const SizedBox(height: 8),
           const BrandHeader(onDark: false, nameSize: 44),

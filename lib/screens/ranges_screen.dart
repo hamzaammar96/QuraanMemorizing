@@ -32,7 +32,8 @@ class RangesScreen extends StatelessWidget {
               ),
             )
           : ListView.builder(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.fromLTRB(
+                  12, 12, 12, 12 + MediaQuery.of(context).padding.bottom),
               itemCount: ranges.length,
               itemBuilder: (context, index) {
                 final r = ranges[index];
