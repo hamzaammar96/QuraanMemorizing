@@ -27,8 +27,8 @@ jobs:
 
       - run: flutter pub get
 
-      # base-href يطابق اسم المستودع، وتعطيل الـ service worker لتفادي النسخ القديمة.
-      - run: flutter build web --release --base-href "/QuraanMemorizing/" --pwa-strategy=none
+      # نطاق مخصّص (moutqin.hamzaammar.com) يُخدَّم من الجذر، وتعطيل الـ service worker.
+      - run: flutter build web --release --base-href "/" --pwa-strategy=none
 
       - uses: actions/configure-pages@v5
         with:
