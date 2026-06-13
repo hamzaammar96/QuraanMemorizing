@@ -62,7 +62,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.appName),
+        centerTitle: false,
+        titleSpacing: 12,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Icon(Icons.menu_book_rounded, size: 26),
+            SizedBox(width: 8),
+            Text(
+              AppStrings.appName,
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
+              ),
+            ),
+          ],
+        ),
         actions: [
           if (last != null)
             IconButton(
