@@ -13,22 +13,28 @@ class ProgressState {
   /// أحداث الإنجاز اليومية (يمكن أن يحدث أكثر من حدث في اليوم).
   List<CompletionEvent> events;
 
+  /// آخر وقت تعديل (ميلي ثانية) — يُستخدم للمزامنة السحابية.
+  int lastModified;
+
   ProgressState({
     required this.reviewIndex,
     required this.onboardingDone,
     required this.events,
+    this.lastModified = 0,
   });
 
   factory ProgressState.initial() => ProgressState(
         reviewIndex: 0,
         onboardingDone: false,
         events: [],
+        lastModified: 0,
       );
 
   Map<String, dynamic> toJson() => {
         'reviewIndex': reviewIndex,
         'onboardingDone': onboardingDone,
         'events': events.map((e) => e.toJson()).toList(),
+        'lastModified': lastModified,
       };
 
   factory ProgressState.fromJson(Map<String, dynamic> json) {
@@ -39,6 +45,7 @@ class ProgressState {
           .map((e) =>
               CompletionEvent.fromJson((e as Map).cast<String, dynamic>()))
           .toList(),
+      lastModified: json['lastModified'] as int? ?? 0,
     );
   }
 }

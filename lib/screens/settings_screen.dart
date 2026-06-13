@@ -73,6 +73,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
+          _section('الحساب والمزامنة'),
+          _accountCard(context.watch<AppState>()),
           _section('خطة المراجعة'),
           _numberTile(
             label: 'عدد صفحات المراجعة اليومية',
@@ -166,6 +168,105 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
         ],
+      ),
+    );
+  }
+
+  // بطاقة الحساب والمزامنة السحابية بحساب غوغل.
+  Widget _accountCard(AppState state) {
+    if (!state.isCloudConfigured) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.cloud_off, color: AppTheme.textMuted),
+                  SizedBox(width: 8),
+                  Text('المزامنة غير مُفعّلة',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+              SizedBox(height: 8),
+              Text(
+                'لتفعيل الحفظ السحابي وربط حساب غوغل، أكمل إعداد Firebase '
+                'حسب الخطوات في ملف README ثم أعد فتح التطبيق.',
+                style: TextStyle(color: AppTheme.textMuted),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (!state.isSignedIn) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('احفظ بياناتك سحابياً وزامنها عبر أجهزتك',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () => state.signInWithGoogle(),
+                icon: const Icon(Icons.login),
+                label: const Text('تسجيل الدخول بحساب غوغل'),
+              ),
+              if (state.syncStatus.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(state.syncStatus,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: AppTheme.textMuted)),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.cloud_done, color: AppTheme.primaryGreen),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(state.userName ?? 'حساب غوغل',
+                          style:
+                              const TextStyle(fontWeight: FontWeight.bold)),
+                      if (state.userEmail != null)
+                        Text(state.userEmail!,
+                            style: const TextStyle(
+                                color: AppTheme.textMuted, fontSize: 13)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              state.syncStatus.isEmpty ? 'المزامنة مُفعّلة' : state.syncStatus,
+              style: const TextStyle(color: AppTheme.primaryGreen),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => state.signOut(),
+              icon: const Icon(Icons.logout),
+              label: const Text('تسجيل الخروج'),
+            ),
+          ],
+        ),
       ),
     );
   }
