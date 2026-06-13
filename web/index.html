@@ -18,8 +18,76 @@
 
   <title>مُتقِن</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* شاشة تحميل أولية تُعرض فوراً قبل تحميل محرّك فلاتر (تمنع الصفحة البيضاء). */
+    #app-loading {
+      position: fixed;
+      inset: 0;
+      background-color: #2E7D5B;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.35s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, sans-serif;
+    }
+    #app-loading .brand {
+      color: #fff;
+      font-size: 52px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    }
+    #app-loading .accent {
+      width: 70px;
+      height: 4px;
+      background: #B8860B;
+      border-radius: 2px;
+      margin: 12px 0 28px;
+    }
+    #app-loading .spinner {
+      width: 38px;
+      height: 38px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: app-spin 0.9s linear infinite;
+    }
+    @keyframes app-spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
+  <div id="app-loading">
+    <div class="brand">مُتقِن</div>
+    <div class="accent"></div>
+    <div class="spinner"></div>
+  </div>
+
+  <script>
+    // إزالة أي Service Worker قديم وذاكرة تخزين مؤقتة لتفادي عرض نسخة قديمة.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (regs) {
+        regs.forEach(function (r) { r.unregister(); });
+      });
+    }
+    if (window.caches && caches.keys) {
+      caches.keys().then(function (keys) {
+        keys.forEach(function (k) { caches.delete(k); });
+      });
+    }
+    // إخفاء شاشة التحميل عند رسم أول إطار من التطبيق.
+    window.addEventListener('flutter-first-frame', function () {
+      var el = document.getElementById('app-loading');
+      if (el) {
+        el.style.opacity = '0';
+        setTimeout(function () { el.remove(); }, 350);
+      }
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

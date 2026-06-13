@@ -27,8 +27,8 @@ jobs:
 
       - run: flutter pub get
 
-      # base-href يجب أن يطابق اسم المستودع لموقع المشروع على Pages.
-      - run: flutter build web --release --base-href "/QuraanMemorizing/"
+      # base-href يطابق اسم المستودع، وتعطيل الـ service worker لتفادي النسخ القديمة.
+      - run: flutter build web --release --base-href "/QuraanMemorizing/" --pwa-strategy=none
 
       - uses: actions/configure-pages@v5
         with:
