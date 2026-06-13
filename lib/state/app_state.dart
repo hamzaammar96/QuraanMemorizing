@@ -29,6 +29,9 @@ class AppState extends ChangeNotifier {
   late ProgressState progress;
   bool _loaded = false;
 
+  /// هل شُوهد دليل الاستخدام على هذا الجهاز؟ (محلي، لا يُزامن)
+  bool helpSeen = false;
+
   // ===== حالة المزامنة السحابية =====
   User? user;
   String syncStatus = '';
@@ -64,6 +67,7 @@ class AppState extends ChangeNotifier {
     final savedSettings = await _storage.loadSettings();
     settings = savedSettings ?? PlanSettings.defaults();
     progress = await _storage.loadProgress();
+    helpSeen = await _storage.loadHelpSeen();
     await _notifications.init();
 
     // تهيئة Firebase قبل التوجيه (لتفادي وميض شاشة الدخول).
@@ -84,6 +88,12 @@ class AppState extends ChangeNotifier {
     _authSub?.cancel();
     _docSub?.cancel();
     super.dispose();
+  }
+
+  /// تعليم أن دليل الاستخدام قد عُرض (حتى لا يظهر تلقائياً مرة أخرى).
+  Future<void> markHelpSeen() async {
+    helpSeen = true;
+    await _storage.saveHelpSeen();
   }
 
   // ===== المصادقة بحساب غوغل =====

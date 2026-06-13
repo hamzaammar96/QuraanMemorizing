@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../constants/app_strings.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/brand_header.dart';
 import 'home_screen.dart';
 import 'onboarding_screen.dart';
 import 'sign_in_screen.dart';
@@ -40,25 +42,11 @@ class _Logo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       mainAxisSize: MainAxisSize.min,
-      children: const [
-        Icon(Icons.menu_book_rounded, size: 88, color: Colors.white),
-        SizedBox(height: 16),
-        Text(
-          'مُتقِن',
-          style: TextStyle(
-            fontSize: 40,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        SizedBox(height: 8),
-        Text(
-          'وردك اليومي للمراجعة والحفظ',
-          style: TextStyle(fontSize: 16, color: Colors.white70),
-        ),
-        SizedBox(height: 24),
+      children: [
+        BrandHeader(onDark: true, nameSize: 48, tagline: AppStrings.splashTagline),
+        SizedBox(height: 28),
         CircularProgressIndicator(color: Colors.white),
       ],
     );

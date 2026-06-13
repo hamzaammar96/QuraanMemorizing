@@ -10,6 +10,18 @@ import '../models/progress_state.dart';
 class StorageService {
   static const _settingsKey = 'mutqin_settings';
   static const _progressKey = 'mutqin_progress';
+  static const _helpSeenKey = 'mutqin_help_seen';
+
+  /// هل عُرض دليل الاستخدام من قبل على هذا الجهاز؟ (محلي، لا يُزامن)
+  Future<bool> loadHelpSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_helpSeenKey) ?? false;
+  }
+
+  Future<void> saveHelpSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_helpSeenKey, true);
+  }
 
   Future<void> saveSettings(PlanSettings settings) async {
     final prefs = await SharedPreferences.getInstance();

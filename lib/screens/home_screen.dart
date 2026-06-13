@@ -2,17 +2,47 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../constants/app_strings.dart';
 import '../models/day_type.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/ward_card.dart';
+import 'help_screen.dart';
 import 'history_screen.dart';
 import 'ranges_screen.dart';
 import 'settings_screen.dart';
 
 /// الشاشة الرئيسية — تعرض ورد المراجعة وورد الحفظ وحالة اليوم وأزرار الإكمال.
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // عرض دليل الاستخدام تلقائياً عند أول استخدام.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowHelp());
+  }
+
+  Future<void> _maybeShowHelp() async {
+    final state = context.read<AppState>();
+    if (state.helpSeen) return;
+    await state.markHelpSeen();
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const HelpScreen()),
+    );
+  }
+
+  void _openHelp() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const HelpScreen()),
+    );
+  }
 
   /// نص عربي لعدد مرّات الإكمال اليوم.
   static String? _countNote(int count) {
@@ -32,7 +62,7 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('مُتقِن'),
+        title: const Text(AppStrings.appName),
         actions: [
           if (last != null)
             IconButton(
@@ -40,6 +70,11 @@ class HomeScreen extends StatelessWidget {
               icon: const Icon(Icons.undo),
               onPressed: () => _confirmUndo(context),
             ),
+          IconButton(
+            tooltip: AppStrings.helpButton,
+            icon: const Icon(Icons.help_outline),
+            onPressed: _openHelp,
+          ),
           IconButton(
             tooltip: 'سجل الإنجاز',
             icon: const Icon(Icons.calendar_month),
@@ -59,6 +94,7 @@ class HomeScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
+          const _WelcomeBanner(),
           _DayHeader(dayType: dayType),
           const SizedBox(height: 4),
 
@@ -166,6 +202,51 @@ class HomeScreen extends StatelessWidget {
         const SnackBar(content: Text('تم التراجع عن آخر إنجاز')),
       );
     }
+  }
+}
+
+/// لافتة ترحيب في أعلى الصفحة الرئيسية.
+class _WelcomeBanner extends StatelessWidget {
+  const _WelcomeBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppTheme.primaryGreen, Color(0xFF1B7A5A)],
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.wb_sunny_rounded, color: AppTheme.accentGold),
+              const SizedBox(width: 8),
+              Text(
+                AppStrings.homeTitle,
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            AppStrings.homeDescription,
+            style: TextStyle(fontSize: 14, height: 1.6, color: Colors.white70),
+          ),
+        ],
+      ),
+    );
   }
 }
 
