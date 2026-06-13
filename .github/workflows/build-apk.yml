@@ -1,0 +1,37 @@
+name: بناء نسخة APK
+
+on:
+  push:
+    branches: [claude/mutqin-quran-app-47lwv9]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: تثبيت Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: تثبيت Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      # توليد مجلد أندرويد وتطبيق إعدادات الاسم العربي والإشعارات.
+      - run: flutter create --org com.mutqin --project-name mutqin --platforms=android .
+      - run: python3 tool/apply_android_config.py
+      - run: flutter pub get
+
+      - run: flutter build apk --release
+
+      - name: رفع ملف APK كـ artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutqin-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error

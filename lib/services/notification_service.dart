@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -5,7 +6,7 @@ import 'package:timezone/timezone.dart' as tz;
 import '../models/plan_settings.dart';
 
 /// خدمة الإشعارات اليومية المجدولة (إشعار للمراجعة وإشعار للحفظ).
-/// النصوص عربية بالكامل.
+/// النصوص عربية بالكامل. الإشعارات غير مدعومة على الويب (تُتجاهل بأمان).
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
@@ -21,7 +22,7 @@ class NotificationService {
 
   /// تهيئة الخدمة وقواعد المناطق الزمنية.
   Future<void> init() async {
-    if (_initialized) return;
+    if (_initialized || kIsWeb) return;
 
     tz.initializeTimeZones();
 
@@ -51,6 +52,7 @@ class NotificationService {
 
   /// إعادة جدولة الإشعارات بناءً على الإعدادات الحالية.
   Future<void> reschedule(PlanSettings settings) async {
+    if (kIsWeb) return;
     await init();
     // إلغاء الإشعارات القديمة أولاً.
     await _plugin.cancel(_reviewNotifId);
@@ -104,6 +106,8 @@ class NotificationService {
       _nextInstanceOf(hour, minute),
       details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time, // تكرار يومي
     );
   }
