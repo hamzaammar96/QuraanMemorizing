@@ -63,9 +63,9 @@ class AppStrings {
   // ===== صفحة تحميل تطبيق أندرويد =====
   static const String apkReleasesUrl =
       'https://github.com/hamzaammar96/QuraanMemorizing/releases/latest';
-  // رابط مباشر يشير دائماً لأحدث ملف APK منشور.
+  // رابط مباشر لتنزيل ملف APK (أحدث نسخة منشورة).
   static const String apkDirectUrl =
-      'https://github.com/hamzaammar96/QuraanMemorizing/releases/latest/download/app-release.apk';
+      'https://github.com/hamzaammar96/QuraanMemorizing/releases/download/apk-v21/app-release.apk';
   static const String downloadLinkLabel = 'تحميل تطبيق أندرويد';
   static const String downloadTitle = 'تطبيق أندرويد';
   static const String downloadHeadline = 'حمّل مُتقِن على أجهزة أندرويد';
