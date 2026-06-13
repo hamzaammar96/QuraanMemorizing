@@ -1,57 +1,43 @@
-import 'achievement_record.dart';
+import 'completion_event.dart';
 
 /// حالة التقدم المحفوظة محلياً على الجهاز.
-/// تحتوي على مؤشرات المراجعة وتواريخ آخر إكمال وسجل الإنجاز.
+/// تحتوي على مؤشر المراجعة وقائمة أحداث الإنجاز (تدعم التكرار والتراجع).
 class ProgressState {
   /// مؤشر المراجعة: موضع الصفحة التالية داخل قائمة صفحات النطاقات المسطّحة.
   /// لا يتقدّم إلا عند الضغط على "إكمال المراجعة".
   int reviewIndex;
 
-  /// تاريخ آخر إكمال للمراجعة (yyyy-MM-dd) أو null.
-  String? lastReviewCompletedDate;
-
-  /// تاريخ آخر إكمال للحفظ/الربط (yyyy-MM-dd) أو null.
-  String? lastMemorizeCompletedDate;
-
   /// هل انتهى المستخدم من الإعداد الأول؟
   bool onboardingDone;
 
-  /// سجل الإنجاز اليومي.
-  List<AchievementRecord> history;
+  /// أحداث الإنجاز اليومية (يمكن أن يحدث أكثر من حدث في اليوم).
+  List<CompletionEvent> events;
 
   ProgressState({
     required this.reviewIndex,
-    required this.lastReviewCompletedDate,
-    required this.lastMemorizeCompletedDate,
     required this.onboardingDone,
-    required this.history,
+    required this.events,
   });
 
   factory ProgressState.initial() => ProgressState(
         reviewIndex: 0,
-        lastReviewCompletedDate: null,
-        lastMemorizeCompletedDate: null,
         onboardingDone: false,
-        history: [],
+        events: [],
       );
 
   Map<String, dynamic> toJson() => {
         'reviewIndex': reviewIndex,
-        'lastReviewCompletedDate': lastReviewCompletedDate,
-        'lastMemorizeCompletedDate': lastMemorizeCompletedDate,
         'onboardingDone': onboardingDone,
-        'history': history.map((h) => h.toJson()).toList(),
+        'events': events.map((e) => e.toJson()).toList(),
       };
 
   factory ProgressState.fromJson(Map<String, dynamic> json) {
     return ProgressState(
       reviewIndex: json['reviewIndex'] as int? ?? 0,
-      lastReviewCompletedDate: json['lastReviewCompletedDate'] as String?,
-      lastMemorizeCompletedDate: json['lastMemorizeCompletedDate'] as String?,
       onboardingDone: json['onboardingDone'] as bool? ?? false,
-      history: (json['history'] as List? ?? [])
+      events: (json['events'] as List? ?? [])
           .map((e) =>
-              AchievementRecord.fromJson((e as Map).cast<String, dynamic>()))
+              CompletionEvent.fromJson((e as Map).cast<String, dynamic>()))
           .toList(),
     );
   }

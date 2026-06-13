@@ -14,20 +14,35 @@ import 'settings_screen.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
+  /// نص عربي لعدد مرّات الإكمال اليوم.
+  static String? _countNote(int count) {
+    if (count <= 0) return null;
+    if (count == 1) return 'أُكمل اليوم مرّة واحدة';
+    if (count == 2) return 'أُكمل اليوم مرّتان';
+    return 'أُكمل اليوم $count مرّات';
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     final reviewWard = state.todayReviewWard;
     final memorizeWard = state.todayMemorizeWard;
     final dayType = state.todayDayType;
+    final last = state.lastEvent;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('مُتقِن'),
         actions: [
+          if (last != null)
+            IconButton(
+              tooltip: 'تراجع عن آخر إنجاز',
+              icon: const Icon(Icons.undo),
+              onPressed: () => _confirmUndo(context),
+            ),
           IconButton(
             tooltip: 'سجل الإنجاز',
-            icon: const Icon(Icons.history),
+            icon: const Icon(Icons.calendar_month),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const HistoryScreen()),
             ),
@@ -47,18 +62,18 @@ class HomeScreen extends StatelessWidget {
           _DayHeader(dayType: dayType),
           const SizedBox(height: 4),
 
-          // بطاقة مراجعة اليوم.
+          // بطاقة مراجعة اليوم (يمكن إكمالها أكثر من مرة).
           WardCard(
             title: 'مراجعة اليوم',
             icon: Icons.repeat_rounded,
             wardText: reviewWard.arabicText,
             buttonLabel: 'إكمال المراجعة',
-            completed: state.reviewCompletedToday,
             enabled: !reviewWard.isEmpty,
+            todayNote: _countNote(state.reviewCountToday),
             onComplete: () => _onCompleteReview(context),
           ),
 
-          // بطاقة حفظ اليوم.
+          // بطاقة حفظ اليوم (يمكن حفظ أكثر من صفحة في اليوم).
           WardCard(
             title: 'حفظ اليوم',
             icon: Icons.bookmark_added_rounded,
@@ -66,8 +81,8 @@ class HomeScreen extends StatelessWidget {
             statusBadge: dayType.arabicLabel,
             badgeColor: _badgeColor(dayType),
             buttonLabel: dayType == DayType.link ? 'إكمال الربط' : 'إكمال الحفظ',
-            completed: state.memorizeCompletedToday,
             enabled: dayType != DayType.rest,
+            todayNote: _countNote(state.memorizeCountToday),
             onComplete: () => _onCompleteMemorize(context),
           ),
 
@@ -75,7 +90,6 @@ class HomeScreen extends StatelessWidget {
           _ProgressSummary(),
           const SizedBox(height: 8),
 
-          // اختصار لنطاقات الحفظ.
           Card(
             child: ListTile(
               leading: const Icon(Icons.format_list_numbered,
@@ -106,8 +120,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   Future<void> _onCompleteReview(BuildContext context) async {
-    final state = context.read<AppState>();
-    await state.completeReview();
+    await context.read<AppState>().completeReview();
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('تم إكمال المراجعة')),
@@ -117,46 +130,41 @@ class HomeScreen extends StatelessWidget {
   Future<void> _onCompleteMemorize(BuildContext context) async {
     final state = context.read<AppState>();
     final dayType = state.todayDayType;
-    final newPages = await state.completeMemorize();
+    await state.completeMemorize();
     if (!context.mounted) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          dayType == DayType.link ? 'تم إكمال الربط' : 'تم إكمال الحفظ',
-        ),
+            dayType == DayType.link ? 'تم إكمال الربط' : 'تم إكمال الحفظ'),
       ),
     );
+  }
 
-    // عند حفظ صفحات جديدة، نطلب تأكيد إضافتها لنطاق المراجعة.
-    if (newPages) {
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('إضافة إلى المراجعة'),
-          content: Text(
-            'تم حفظ حتى صفحة ${state.settings.lastMemorizedPage}. '
-            'هل تريد إضافتها إلى نطاق المراجعة؟',
-          ),
-          actions: [
-            TextButton(
+  Future<void> _confirmUndo(BuildContext context) async {
+    final state = context.read<AppState>();
+    final e = state.lastEvent;
+    if (e == null) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تراجع عن آخر إنجاز'),
+        content: Text('سيتم التراجع عن: ${e.typeLabel} — ${e.summary}'),
+        actions: [
+          TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('لاحقاً'),
-            ),
-            ElevatedButton(
+              child: const Text('إلغاء')),
+          ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('نعم، أضف'),
-            ),
-          ],
-        ),
+              child: const Text('تراجع')),
+        ],
+      ),
+    );
+    if (ok == true && context.mounted) {
+      await state.undoLastEvent();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم التراجع عن آخر إنجاز')),
       );
-      if (confirm == true) {
-        await state.extendReviewRangeToMemorized();
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تمت إضافة الصفحات إلى نطاق المراجعة')),
-        );
-      }
     }
   }
 }
@@ -176,18 +184,14 @@ class _DayHeader extends StatelessWidget {
           const Icon(Icons.today, color: AppTheme.primaryGreen, size: 20),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              today,
-              style: const TextStyle(
-                  fontSize: 15,
-                  color: AppTheme.textDark,
-                  fontWeight: FontWeight.w600),
-            ),
+            child: Text(today,
+                style: const TextStyle(
+                    fontSize: 15,
+                    color: AppTheme.textDark,
+                    fontWeight: FontWeight.w600)),
           ),
-          Text(
-            'حالة اليوم: ${dayType.arabicLabel}',
-            style: const TextStyle(color: AppTheme.textMuted),
-          ),
+          Text('حالة اليوم: ${dayType.arabicLabel}',
+              style: const TextStyle(color: AppTheme.textMuted)),
         ],
       ),
     );
@@ -230,12 +234,10 @@ class _ProgressSummary extends StatelessWidget {
                   color: AppTheme.textMuted, fontWeight: FontWeight.w600)),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              style: const TextStyle(
-                  color: AppTheme.textDark, fontWeight: FontWeight.bold),
-            ),
+            child: Text(value,
+                textAlign: TextAlign.end,
+                style: const TextStyle(
+                    color: AppTheme.textDark, fontWeight: FontWeight.bold)),
           ),
         ],
       ),

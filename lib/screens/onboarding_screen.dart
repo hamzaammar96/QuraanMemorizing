@@ -17,7 +17,6 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _pageController = TextEditingController(text: '1');
-  bool _useDefaultPlan = true;
 
   @override
   void dispose() {
@@ -30,10 +29,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final lastPage = page.clamp(1, 604);
 
     final state = context.read<AppState>();
-    await state.completeOnboarding(
-      lastMemorizedPage: lastPage,
-      useDefaultPlan: _useDefaultPlan,
-    );
+    await state.completeOnboarding(lastMemorizedPage: lastPage);
 
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
@@ -98,23 +94,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   fillColor: AppTheme.lightGreen,
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // استخدام الخطة الافتراضية.
-              Card(
-                child: SwitchListTile(
-                  value: _useDefaultPlan,
-                  activeColor: AppTheme.primaryGreen,
-                  onChanged: (v) => setState(() => _useDefaultPlan = v),
-                  title: const Text(
-                    'استخدام الخطة الافتراضية',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: const Text(
-                    'مراجعة 10 صفحات يومياً، حفظ صفحة واحدة 6 أيام، '
-                    'يوم ربط لآخر 5 صفحات، والجمعة استراحة.',
-                  ),
-                ),
+              const SizedBox(height: 12),
+              const Text(
+                'سنبدأ بالخطة الافتراضية، ويمكنك تعديل كل الأرقام لاحقاً من الإعدادات.',
+                style: TextStyle(color: AppTheme.textMuted),
               ),
               const SizedBox(height: 24),
 

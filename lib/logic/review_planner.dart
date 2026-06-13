@@ -30,6 +30,7 @@ class ReviewPlanner {
     required List<MemorizationRange> ranges,
     required int dailyReviewPages,
     required int reviewIndex,
+    bool includeFatihaExtra = true,
   }) {
     final flat = flatten(ranges);
 
@@ -38,10 +39,18 @@ class ReviewPlanner {
     }
 
     final total = flat.length;
-    // عدد الصفحات لا يتجاوز إجمالي الصفحات المتاحة.
-    final count = dailyReviewPages > total ? total : dailyReviewPages;
     // ضبط المؤشر ضمن الحدود (يدعم الالتفاف للبداية).
     final start = ((reviewIndex % total) + total) % total;
+
+    // قاعدة الفاتحة: عندما يبدأ الورد من صفحة 1 نضيف صفحة واحدة
+    // لأن سورة الفاتحة قصيرة، فيصبح أول ورد 1→11 ثم 12→21 وهكذا.
+    var requested = dailyReviewPages;
+    if (includeFatihaExtra && flat[start] == 1) {
+      requested += 1;
+    }
+
+    // عدد الصفحات لا يتجاوز إجمالي الصفحات المتاحة.
+    final count = requested > total ? total : requested;
 
     // جمع صفحات الورد مع الالتفاف عند نهاية القائمة.
     final wardPages = <int>[];

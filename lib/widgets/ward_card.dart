@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// بطاقة عرض ورد اليوم (مراجعة أو حفظ) مع زر إكمال.
+/// بطاقة عرض ورد اليوم (مراجعة أو حفظ) مع زر إكمال يمكن استخدامه أكثر من مرة.
 class WardCard extends StatelessWidget {
   final String title;
   final IconData icon;
@@ -10,9 +10,11 @@ class WardCard extends StatelessWidget {
   final String? statusBadge;
   final Color badgeColor;
   final String buttonLabel;
-  final bool completed;
   final bool enabled;
   final VoidCallback onComplete;
+
+  /// ملاحظة ما أُنجز اليوم (مثل: "أُكمل اليوم: مرّتان").
+  final String? todayNote;
 
   const WardCard({
     super.key,
@@ -22,9 +24,9 @@ class WardCard extends StatelessWidget {
     this.statusBadge,
     this.badgeColor = AppTheme.primaryGreen,
     required this.buttonLabel,
-    required this.completed,
     required this.enabled,
     required this.onComplete,
+    this.todayNote,
   });
 
   @override
@@ -39,11 +41,9 @@ class WardCard extends StatelessWidget {
               children: [
                 Icon(icon, color: AppTheme.primaryGreen),
                 const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
-                ),
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold)),
                 const Spacer(),
                 if (statusBadge != null)
                   Container(
@@ -53,42 +53,36 @@ class WardCard extends StatelessWidget {
                       color: badgeColor.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(
-                      statusBadge!,
-                      style: TextStyle(
-                          color: badgeColor, fontWeight: FontWeight.bold),
-                    ),
+                    child: Text(statusBadge!,
+                        style: TextStyle(
+                            color: badgeColor, fontWeight: FontWeight.bold)),
                   ),
               ],
             ),
             const SizedBox(height: 14),
-            Text(
-              wardText,
-              style: const TextStyle(fontSize: 20, color: AppTheme.textDark),
-            ),
+            Text(wardText,
+                style: const TextStyle(fontSize: 20, color: AppTheme.textDark)),
             const SizedBox(height: 16),
-            if (completed)
+            ElevatedButton.icon(
+              onPressed: enabled ? onComplete : null,
+              icon: const Icon(Icons.done_all),
+              label: Text(buttonLabel),
+            ),
+            if (todayNote != null) ...[
+              const SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.check_circle, color: AppTheme.primaryGreen),
-                  SizedBox(width: 8),
-                  Text(
-                    'تم الإكمال اليوم',
-                    style: TextStyle(
-                      color: AppTheme.primaryGreen,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
+                children: [
+                  const Icon(Icons.check_circle,
+                      color: AppTheme.primaryGreen, size: 18),
+                  const SizedBox(width: 6),
+                  Text(todayNote!,
+                      style: const TextStyle(
+                          color: AppTheme.primaryGreen,
+                          fontWeight: FontWeight.bold)),
                 ],
-              )
-            else
-              ElevatedButton.icon(
-                onPressed: enabled ? onComplete : null,
-                icon: const Icon(Icons.done_all),
-                label: Text(buttonLabel),
               ),
+            ],
           ],
         ),
       ),

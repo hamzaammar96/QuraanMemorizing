@@ -89,6 +89,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: (v) => setState(() => _draft.lastMemorizedPage = v),
           ),
           Card(
+            child: SwitchListTile(
+              value: _draft.includeFatihaExtra,
+              activeColor: AppTheme.primaryGreen,
+              title: const Text('صفحة الفاتحة الإضافية'),
+              subtitle: const Text('أول ورد يبدأ من صفحة 1 يكون 1→11 ثم 12→21'),
+              onChanged: (v) => setState(() => _draft.includeFatihaExtra = v),
+            ),
+          ),
+          Card(
             child: ListTile(
               leading: const Icon(Icons.format_list_numbered,
                   color: AppTheme.primaryGreen),

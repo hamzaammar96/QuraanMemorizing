@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../logic/memorization_planner.dart';
 import '../logic/review_planner.dart';
-import '../models/achievement_record.dart';
+import '../models/completion_event.dart';
 import '../models/day_type.dart';
 import '../models/memorization_range.dart';
 import '../models/plan_settings.dart';
@@ -25,8 +25,9 @@ class AppState extends ChangeNotifier {
   bool get isLoaded => _loaded;
   bool get onboardingDone => _loaded && progress.onboardingDone;
 
-  /// تاريخ اليوم بصيغة yyyy-MM-dd.
-  String get _today => DateFormat('yyyy-MM-dd').format(DateTime.now());
+  String _dateOf(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
+  String get _today => _dateOf(DateTime.now());
+  String get _now => DateFormat('HH:mm').format(DateTime.now());
 
   /// تحميل الإعدادات والتقدم من التخزين عند بدء التطبيق.
   Future<void> load() async {
@@ -40,18 +41,10 @@ class AppState extends ChangeNotifier {
 
   // ===== الإعداد الأول =====
 
-  /// إنهاء الإعداد الأول وحفظ آخر صفحة محفوظة (مع/بدون الخطة الافتراضية).
-  Future<void> completeOnboarding({
-    required int lastMemorizedPage,
-    required bool useDefaultPlan,
-  }) async {
-    if (useDefaultPlan) {
-      settings = PlanSettings.defaults(lastMemorizedPage: lastMemorizedPage);
-    } else {
-      settings.lastMemorizedPage = lastMemorizedPage;
-      // عند الإعداد الأول نضبط نطاق المراجعة ليشمل ما تم حفظه من صفحة 1.
-      settings.ranges = [MemorizationRange(start: 1, end: lastMemorizedPage)];
-    }
+  /// إنهاء الإعداد الأول: يُطبّق الخطة الافتراضية مع آخر صفحة محفوظة.
+  /// تبقى كل الأرقام قابلة للتعديل لاحقاً من شاشة الإعدادات.
+  Future<void> completeOnboarding({required int lastMemorizedPage}) async {
+    settings = PlanSettings.defaults(lastMemorizedPage: lastMemorizedPage);
     progress.onboardingDone = true;
     progress.reviewIndex = 0;
     await _persistAll();
@@ -65,6 +58,7 @@ class AppState extends ChangeNotifier {
         ranges: settings.ranges,
         dailyReviewPages: settings.dailyReviewPages,
         reviewIndex: progress.reviewIndex,
+        includeFatihaExtra: settings.includeFatihaExtra,
       );
 
   MemorizationWard get todayMemorizeWard => MemorizationPlanner.computeWard(
@@ -75,72 +69,98 @@ class AppState extends ChangeNotifier {
   DayType get todayDayType =>
       settings.dayTypes[DateTime.now().weekday] ?? DayType.memorize;
 
-  bool get reviewCompletedToday =>
-      progress.lastReviewCompletedDate == _today;
+  /// عدد مرّات إكمال المراجعة اليوم.
+  int get reviewCountToday =>
+      progress.events.where((e) => e.date == _today && e.type == 'review').length;
 
-  bool get memorizeCompletedToday =>
-      progress.lastMemorizeCompletedDate == _today;
+  /// عدد مرّات إكمال الحفظ/الربط اليوم.
+  int get memorizeCountToday => progress.events
+      .where((e) => e.date == _today && (e.type == 'memorize' || e.type == 'link'))
+      .length;
 
-  // ===== الإكمال =====
+  /// آخر حدث إنجاز مسجّل (للتراجع السريع).
+  CompletionEvent? get lastEvent =>
+      progress.events.isEmpty ? null : progress.events.first;
 
-  /// إكمال المراجعة: يقدّم مؤشر المراجعة ويسجّل الإنجاز.
-  /// لا يتقدّم الورد إلا عند استدعاء هذه الدالة.
+  /// أحداث يوم معيّن مرتّبة من الأحدث.
+  List<CompletionEvent> eventsForDate(DateTime day) {
+    final key = _dateOf(day);
+    return progress.events.where((e) => e.date == key).toList();
+  }
+
+  /// مجموعة التواريخ التي بها إنجاز (لتلوين الرزنامة).
+  Set<String> get datesWithEvents =>
+      progress.events.map((e) => e.date).toSet();
+
+  // ===== الإكمال (يدعم التكرار خلال اليوم) =====
+
+  /// إكمال المراجعة: يقدّم المؤشر ويسجّل حدثاً. يمكن تكراره عدة مرات في اليوم.
   Future<void> completeReview() async {
-    if (reviewCompletedToday) return;
     final ward = todayReviewWard;
     if (ward.isEmpty) return;
 
+    final delta = ward.totalPages;
     progress.reviewIndex = ward.nextIndex;
-    progress.lastReviewCompletedDate = _today;
-    _recordAchievement(reviewSummary: ward.arabicText);
+    _addEvent(type: 'review', summary: ward.arabicText, reviewDelta: delta);
 
     await _persistProgress();
     notifyListeners();
   }
 
-  /// إكمال الحفظ: يقدّم آخر صفحة محفوظة (في يوم الحفظ فقط) ويسجّل الإنجاز.
-  /// في يوم الربط لا تتم إضافة صفحة جديدة بل يُسجّل الربط فقط.
-  /// يُعيد true إذا كان هناك حفظ جديد يمكن إضافته لنطاق المراجعة.
-  Future<bool> completeMemorize() async {
-    if (memorizeCompletedToday) return false;
+  /// إكمال الحفظ/الربط: في يوم الحفظ يقدّم آخر صفحة محفوظة. يمكن تكراره في اليوم.
+  Future<void> completeMemorize() async {
     final ward = todayMemorizeWard;
-    if (ward.type == DayType.rest) return false;
+    if (ward.type == DayType.rest) return;
 
-    bool newPagesMemorized = false;
+    int pageDelta = 0;
+    String type = 'link';
 
     if (ward.type == DayType.memorize && ward.segment != null) {
+      pageDelta = ward.segment!.pageCount;
       settings.lastMemorizedPage =
-          MemorizationPlanner.advanceAfterMemorize(settings);
-      newPagesMemorized = true;
+          (settings.lastMemorizedPage + pageDelta)
+              .clamp(0, MemorizationPlanner.maxPage);
+      type = 'memorize';
+      // مزامنة نطاق المراجعة تلقائياً مع ما تم حفظه (إن كان متصلاً).
+      _autoExtendReviewRange();
     }
 
-    progress.lastMemorizeCompletedDate = _today;
-    _recordAchievement(memorizeSummary: ward.arabicText);
+    _addEvent(type: type, summary: ward.arabicText, pageDelta: pageDelta);
 
     await _persistAll();
     notifyListeners();
-    return newPagesMemorized;
   }
 
-  /// إضافة الصفحات المحفوظة حديثاً إلى نطاق المراجعة (بعد تأكيد المستخدم).
-  /// تمدّد آخر نطاق إذا كانت الصفحة متصلة به، وإلا تُنشئ نطاقاً جديداً.
-  Future<void> extendReviewRangeToMemorized() async {
-    final last = settings.lastMemorizedPage;
-    if (settings.ranges.isEmpty) {
-      settings.ranges.add(MemorizationRange(start: 1, end: last));
-    } else {
-      final lastRange = settings.ranges.last;
-      if (last > lastRange.end && last <= lastRange.end + settings.memorizeDailyPages + 1) {
-        // متصل بآخر نطاق: مدّد النطاق.
-        lastRange.end = last;
-      } else if (last > lastRange.end) {
-        // غير متصل: أنشئ نطاقاً جديداً يبدأ من الصفحة الجديدة.
-        final newStart = (last - settings.memorizeDailyPages + 1).clamp(1, last);
-        settings.ranges.add(MemorizationRange(start: newStart, end: last));
+  // ===== التراجع عن الإنجاز =====
+
+  /// التراجع عن حدث إنجاز معيّن (يعيد المؤشرات إلى ما قبله).
+  Future<void> undoEvent(String eventId) async {
+    final idx = progress.events.indexWhere((e) => e.id == eventId);
+    if (idx < 0) return;
+    final e = progress.events[idx];
+
+    // التراجع باستخدام المقدار (delta) — آمن لأي حدث.
+    if (e.reviewDelta != 0) {
+      final total = ReviewPlanner.flatten(settings.ranges).length;
+      if (total > 0) {
+        progress.reviewIndex =
+            ((progress.reviewIndex - e.reviewDelta) % total + total) % total;
       }
     }
-    await _persistSettings();
+    if (e.pageDelta != 0) {
+      settings.lastMemorizedPage =
+          (settings.lastMemorizedPage - e.pageDelta).clamp(0, MemorizationPlanner.maxPage);
+    }
+
+    progress.events.removeAt(idx);
+    await _persistAll();
     notifyListeners();
+  }
+
+  /// التراجع عن آخر إنجاز مسجّل.
+  Future<void> undoLastEvent() async {
+    final e = lastEvent;
+    if (e != null) await undoEvent(e.id);
   }
 
   // ===== إدارة نطاقات الحفظ =====
@@ -162,13 +182,8 @@ class AppState extends ChangeNotifier {
   Future<void> deleteRange(int index) async {
     if (index < 0 || index >= settings.ranges.length) return;
     settings.ranges.removeAt(index);
-    // إعادة ضبط المؤشر إن أصبح خارج الحدود.
     final total = ReviewPlanner.flatten(settings.ranges).length;
-    if (total == 0) {
-      progress.reviewIndex = 0;
-    } else {
-      progress.reviewIndex = progress.reviewIndex % total;
-    }
+    progress.reviewIndex = total == 0 ? 0 : progress.reviewIndex % total;
     await _persistAll();
     notifyListeners();
   }
@@ -177,40 +192,48 @@ class AppState extends ChangeNotifier {
 
   Future<void> updateSettings(PlanSettings newSettings) async {
     settings = newSettings;
-    // الحفاظ على المؤشر ضمن الحدود الجديدة.
     final total = ReviewPlanner.flatten(settings.ranges).length;
-    if (total > 0) {
-      progress.reviewIndex = progress.reviewIndex % total;
-    }
+    if (total > 0) progress.reviewIndex = progress.reviewIndex % total;
     await _persistAll();
     await _notifications.reschedule(settings);
     notifyListeners();
   }
 
-  Future<void> refreshNotifications() async {
-    await _notifications.reschedule(settings);
-  }
+  Future<void> refreshNotifications() => _notifications.reschedule(settings);
 
   // ===== مساعدات داخلية =====
 
-  void _recordAchievement({String? reviewSummary, String? memorizeSummary}) {
-    final today = _today;
-    final idx = progress.history.indexWhere((h) => h.date == today);
-    if (idx >= 0) {
-      progress.history[idx] = progress.history[idx].copyWith(
-        reviewSummary: reviewSummary,
-        memorizeSummary: memorizeSummary,
-      );
-    } else {
-      progress.history.insert(
-        0,
-        AchievementRecord(
-          date: today,
-          reviewSummary: reviewSummary,
-          memorizeSummary: memorizeSummary,
-        ),
-      );
+  /// تمديد آخر نطاق مراجعة تلقائياً ليشمل ما تم حفظه إن كان متصلاً به.
+  void _autoExtendReviewRange() {
+    final last = settings.lastMemorizedPage;
+    if (settings.ranges.isEmpty) {
+      settings.ranges.add(MemorizationRange(start: 1, end: last));
+      return;
     }
+    final lastRange = settings.ranges.last;
+    if (last > lastRange.end && last <= lastRange.end + settings.memorizeDailyPages) {
+      lastRange.end = last; // متصل: مدّد النطاق
+    }
+  }
+
+  void _addEvent({
+    required String type,
+    required String summary,
+    int reviewDelta = 0,
+    int pageDelta = 0,
+  }) {
+    progress.events.insert(
+      0,
+      CompletionEvent(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        date: _today,
+        time: _now,
+        type: type,
+        summary: summary,
+        reviewDelta: reviewDelta,
+        pageDelta: pageDelta,
+      ),
+    );
   }
 
   Future<void> _persistSettings() => _storage.saveSettings(settings);

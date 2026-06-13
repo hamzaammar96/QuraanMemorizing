@@ -7,21 +7,32 @@ import 'package:mutqin/models/plan_settings.dart';
 
 void main() {
   group('ReviewPlanner', () {
-    test('ورد متتابع داخل نطاق واحد', () {
+    test('قاعدة الفاتحة: أول ورد 1→11 ثم 12→21', () {
       final ranges = [MemorizationRange(start: 1, end: 51)];
-      // اليوم الأول: من المؤشر 0، 10 صفحات => 1..10
+      // اليوم الأول يبدأ من صفحة 1 => 11 صفحة (1..11) بسبب الفاتحة.
       final d1 = ReviewPlanner.computeWard(
           ranges: ranges, dailyReviewPages: 10, reviewIndex: 0);
-      expect(d1.totalPages, 10);
-      expect(d1.segments.length, 1);
+      expect(d1.totalPages, 11);
       expect(d1.segments.first.start, 1);
-      expect(d1.segments.first.end, 10);
+      expect(d1.segments.first.end, 11);
 
-      // اليوم الثاني: من المؤشر 10 => 11..20
+      // اليوم الثاني: من المؤشر 11 => 12..21 (10 صفحات).
       final d2 = ReviewPlanner.computeWard(
           ranges: ranges, dailyReviewPages: 10, reviewIndex: d1.nextIndex);
-      expect(d2.segments.first.start, 11);
-      expect(d2.segments.first.end, 20);
+      expect(d2.totalPages, 10);
+      expect(d2.segments.first.start, 12);
+      expect(d2.segments.first.end, 21);
+    });
+
+    test('تعطيل قاعدة الفاتحة يعطي 10 صفحات من البداية', () {
+      final ranges = [MemorizationRange(start: 1, end: 51)];
+      final d1 = ReviewPlanner.computeWard(
+          ranges: ranges,
+          dailyReviewPages: 10,
+          reviewIndex: 0,
+          includeFatihaExtra: false);
+      expect(d1.totalPages, 10);
+      expect(d1.segments.first.end, 10);
     });
 
     test('الالتفاف إلى البداية عند نهاية النطاق', () {

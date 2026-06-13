@@ -19,6 +19,10 @@ class PlanSettings {
   /// عدد صفحات الربط المعروضة في يوم الربط (الافتراضي 5).
   int linkPages;
 
+  /// جعل أول ورد مراجعة يبدأ من صفحة 1 يضمّ صفحة إضافية (الفاتحة).
+  /// مثال: أول ورد 1→11 ثم 12→21 ... (الافتراضي مُفعّل).
+  bool includeFatihaExtra;
+
   /// نوع كل يوم من أيام الأسبوع.
   /// المفتاح هو رقم اليوم حسب DateTime.weekday (الإثنين=1 ... الأحد=7).
   Map<int, DayType> dayTypes;
@@ -40,6 +44,7 @@ class PlanSettings {
     required this.ranges,
     required this.memorizeDailyPages,
     required this.linkPages,
+    required this.includeFatihaExtra,
     required this.dayTypes,
     required this.notificationsEnabled,
     required this.reviewNotifHour,
@@ -59,6 +64,7 @@ class PlanSettings {
       ranges: [MemorizationRange(start: 1, end: lastMemorizedPage)],
       memorizeDailyPages: 1,
       linkPages: 5,
+      includeFatihaExtra: true,
       dayTypes: {
         DateTime.monday: DayType.memorize,
         DateTime.tuesday: DayType.memorize,
@@ -82,6 +88,7 @@ class PlanSettings {
         'ranges': ranges.map((r) => r.toJson()).toList(),
         'memorizeDailyPages': memorizeDailyPages,
         'linkPages': linkPages,
+        'includeFatihaExtra': includeFatihaExtra,
         'dayTypes':
             dayTypes.map((key, value) => MapEntry(key.toString(), value.name)),
         'notificationsEnabled': notificationsEnabled,
@@ -106,6 +113,7 @@ class PlanSettings {
           .toList(),
       memorizeDailyPages: json['memorizeDailyPages'] as int,
       linkPages: json['linkPages'] as int,
+      includeFatihaExtra: json['includeFatihaExtra'] as bool? ?? true,
       dayTypes: days,
       notificationsEnabled: json['notificationsEnabled'] as bool,
       reviewNotifHour: json['reviewNotifHour'] as int,
