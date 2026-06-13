@@ -25,28 +25,29 @@ class DefaultFirebaseOptions {
   static bool get isConfigured => currentPlatform.apiKey.isNotEmpty;
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: '', // ← الصق القيم من Firebase Console → إعدادات المشروع → تطبيق الويب
-    appId: '',
-    messagingSenderId: '',
-    projectId: '',
-    authDomain: '',
-    storageBucket: '',
+    apiKey: 'AIzaSyDse4NaGZLwdmDQ4nR3QlSoYu_GmdNTeM8',
+    appId: '1:878978217300:web:8d21de6cd3e9b85497c4c1',
+    messagingSenderId: '878978217300',
+    projectId: 'moutqin-7fa44',
+    authDomain: 'moutqin-7fa44.firebaseapp.com',
+    storageBucket: 'moutqin-7fa44.firebasestorage.app',
+    measurementId: 'G-MNQ8BSRQ1S',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: '',
-    appId: '',
-    messagingSenderId: '',
-    projectId: '',
-    storageBucket: '',
+    apiKey: 'AIzaSyDse4NaGZLwdmDQ4nR3QlSoYu_GmdNTeM8',
+    appId: '1:878978217300:web:8d21de6cd3e9b85497c4c1',
+    messagingSenderId: '878978217300',
+    projectId: 'moutqin-7fa44',
+    storageBucket: 'moutqin-7fa44.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: '',
-    appId: '',
-    messagingSenderId: '',
-    projectId: '',
-    storageBucket: '',
+    apiKey: 'AIzaSyDse4NaGZLwdmDQ4nR3QlSoYu_GmdNTeM8',
+    appId: '1:878978217300:web:8d21de6cd3e9b85497c4c1',
+    messagingSenderId: '878978217300',
+    projectId: 'moutqin-7fa44',
+    storageBucket: 'moutqin-7fa44.firebasestorage.app',
     iosBundleId: 'com.mutqin.mutqin',
   );
 }
