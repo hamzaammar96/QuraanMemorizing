@@ -63,9 +63,16 @@ def patch_gradle():
         _patch_gradle_groovy(groovy)
 
 
+def _bump_min_sdk(c):
+    """رفع minSdk إلى 23 (مطلوب لمكتبات Firebase)."""
+    # يظهر `flutter.minSdkVersion` مرة واحدة في قالب فلاتر.
+    return c.replace("flutter.minSdkVersion", "23")
+
+
 def _patch_gradle_groovy(path):
     with open(path, encoding="utf-8") as f:
         c = f.read()
+    c = _bump_min_sdk(c)
     if "coreLibraryDesugaringEnabled" not in c:
         c = re.sub(
             r"(compileOptions\s*\{)",
@@ -97,6 +104,7 @@ def _patch_gradle_groovy(path):
 def _patch_gradle_kts(path):
     with open(path, encoding="utf-8") as f:
         c = f.read()
+    c = _bump_min_sdk(c)
     if "isCoreLibraryDesugaringEnabled" not in c:
         c = re.sub(
             r"(compileOptions\s*\{)",
