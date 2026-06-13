@@ -22,9 +22,31 @@ jobs:
         with:
           channel: stable
 
-      # توليد مجلد أندرويد وتطبيق إعدادات الاسم العربي والإشعارات.
+      # توليد مجلد أندرويد وتطبيق إعدادات الاسم العربي والإشعارات والتوقيع.
       - run: flutter create --org com.mutqin --project-name mutqin --platforms=android .
       - run: python3 tool/apply_android_config.py
+
+      # تجهيز مفتاح التوقيع من أسرار GitHub (إن وُجدت) لتفعيل تسجيل دخول غوغل.
+      - name: تجهيز مفتاح التوقيع
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > android/app/mutqin-release.jks
+            {
+              echo "storePassword=$KEYSTORE_PASSWORD"
+              echo "keyPassword=$KEY_PASSWORD"
+              echo "keyAlias=$KEY_ALIAS"
+              echo "storeFile=mutqin-release.jks"
+            } > android/key.properties
+            echo "تم تجهيز مفتاح التوقيع للإصدار."
+          else
+            echo "لا يوجد KEYSTORE_BASE64 — سيُستخدم توقيع التصحيح."
+          fi
+
       - run: flutter pub get
 
       - run: flutter build apk --release

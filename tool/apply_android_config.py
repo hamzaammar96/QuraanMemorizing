@@ -119,9 +119,61 @@ def _patch_gradle_kts(path):
         )
         if "desugar_jdk_libs" not in c:
             c += '\n\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")\n}\n'
+
+    c = _patch_signing_kts(c)
+
     with open(path, "w", encoding="utf-8") as f:
         f.write(c)
     print("تم تحديث build.gradle.kts (desugaring)")
+
+
+# توقيع نسخة الإصدار من ملف key.properties إن وُجد (وإلا توقيع التصحيح).
+_SIGNING_IMPORTS = "import java.util.Properties\nimport java.io.FileInputStream\n\n"
+
+_SIGNING_LOAD = (
+    "val keystoreProperties = Properties()\n"
+    "val keystorePropertiesFile = rootProject.file(\"key.properties\")\n"
+    "if (keystorePropertiesFile.exists()) {\n"
+    "    keystoreProperties.load(FileInputStream(keystorePropertiesFile))\n"
+    "}\n\n"
+)
+
+_SIGNING_CONFIGS = (
+    "\n    signingConfigs {\n"
+    "        if (keystorePropertiesFile.exists()) {\n"
+    "            create(\"release\") {\n"
+    "                keyAlias = keystoreProperties[\"keyAlias\"] as String\n"
+    "                keyPassword = keystoreProperties[\"keyPassword\"] as String\n"
+    "                storeFile = file(keystoreProperties[\"storeFile\"] as String)\n"
+    "                storePassword = keystoreProperties[\"storePassword\"] as String\n"
+    "            }\n"
+    "        }\n"
+    "    }\n"
+)
+
+
+def _patch_signing_kts(c):
+    if "key.properties" in c:
+        return c  # سبق تطبيقه.
+    # 1) الاستيرادات في أعلى الملف.
+    c = _SIGNING_IMPORTS + c
+    # 2) تحميل خصائص المفتاح قبل كتلة android.
+    c = c.replace("android {", _SIGNING_LOAD + "android {", 1)
+    # 3) كتلة signingConfigs داخل android.
+    c = c.replace(
+        "    ndkVersion = flutter.ndkVersion\n",
+        "    ndkVersion = flutter.ndkVersion\n" + _SIGNING_CONFIGS,
+        1,
+    )
+    # 4) استخدام توقيع الإصدار عند توفّر المفتاح، وإلا التصحيح.
+    c = c.replace(
+        'signingConfig = signingConfigs.getByName("debug")',
+        "signingConfig = if (keystorePropertiesFile.exists())\n"
+        "                signingConfigs.getByName(\"release\")\n"
+        "            else signingConfigs.getByName(\"debug\")",
+        1,
+    )
+    return c
 
 
 if __name__ == "__main__":
